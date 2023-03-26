@@ -1,0 +1,107 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    <changeSet author="tmendigali" id="01">
+        <sql>
+            CREATE TABLE users (
+                                   id VARCHAR(255) PRIMARY KEY,
+                                   full_name VARCHAR(255),
+                                   date_of_birth VARCHAR(255),
+                                   years_of_experience INTEGER,
+                                   username VARCHAR(255) NOT NULL,
+                                   password VARCHAR(255) NOT NULL
+            );
+
+            CREATE TABLE companies (
+                                       id VARCHAR(255) PRIMARY KEY,
+                                       name VARCHAR(255) NOT NULL,
+                                       description VARCHAR(255),
+                                       invite_code VARCHAR(255) NOT NULL UNIQUE
+            );
+
+            CREATE TABLE departments (
+                                         id VARCHAR(255) PRIMARY KEY,
+                                         name VARCHAR(255) NOT NULL,
+                                         company_id VARCHAR(255) NOT NULL,
+                                         FOREIGN KEY (company_id) REFERENCES companies (id)
+            );
+
+-- можно найти в поиске при создании департамента
+            CREATE TABLE search_skills (
+                                           id VARCHAR(255) PRIMARY KEY,
+                                           name VARCHAR(255) NOT NULL
+            );
+
+-- секция скиллов, которые можно добавить в департамент (софт скилы, общие хард скилы, специфичные хард скилы)
+            CREATE TABLE skills_section (
+                                            id VARCHAR(255) PRIMARY KEY,
+                                            name VARCHAR(255) NOT NULL,
+                                            weight INTEGER NOT NULL,
+                                            department_id VARCHAR(255) NOT NULL,
+                                            FOREIGN KEY (department_id) REFERENCES departments (id)
+            );
+
+            CREATE TABLE department_skills (
+                                               id VARCHAR(255) PRIMARY KEY,
+                                               name VARCHAR(255) NOT NULL,
+                                               department_id VARCHAR(255) NOT NULL,
+                                               skills_section_id VARCHAR(255) NOT NULL,
+                                               FOREIGN KEY (department_id) REFERENCES departments (id),
+                                               FOREIGN KEY (skills_section_id) REFERENCES skills_section (id)
+            );
+
+            CREATE TABLE urls (
+                                  id VARCHAR(255) PRIMARY KEY,
+                                  skill_name VARCHAR(255) NOT NULL,
+                                  url VARCHAR(255) NOT NULL
+            );
+
+-- Creating many-to-many relationship between users and companies
+            CREATE TABLE user_company (
+                                          user_id VARCHAR(255) NOT NULL,
+                                          company_id VARCHAR(255) NOT NULL,
+                                          role_name VARCHAR(255) NOT NULL,
+                                          PRIMARY KEY (user_id, company_id),
+                                          FOREIGN KEY (user_id) REFERENCES users (id),
+                                          FOREIGN KEY (company_id) REFERENCES companies (id)
+            );
+
+-- Creating many-to-many relationship between users and departments
+            CREATE TABLE user_department (
+                                             user_id VARCHAR(255) NOT NULL,
+                                             department_id VARCHAR(255) NOT NULL,
+                                             role_name VARCHAR(255) NOT NULL,
+                                             PRIMARY KEY (user_id, department_id),
+                                             FOREIGN KEY (user_id) REFERENCES users (id),
+                                             FOREIGN KEY (department_id) REFERENCES departments (id)
+            );
+
+            CREATE TABLE skill_review (
+                                          id VARCHAR(255) PRIMARY KEY,
+                                          review_request_id VARCHAR(255) NOT NULL,
+                                          skill_name VARCHAR(255) NOT NULL,
+                                          initial_grade INTEGER, -- юзер сам поставил грейд
+                                          changed_grade INTEGER -- тим лид поменял грейд
+            );
+
+            CREATE TABLE review_requests (
+                                             id VARCHAR(255) PRIMARY KEY,
+                                             user_id VARCHAR(255) NOT NULL,
+                                             department_id VARCHAR(255) NOT NULL,
+                                             start_date TIMESTAMP(6) WITHOUT TIME ZONE,
+                                             finish_date TIMESTAMP(6) WITHOUT TIME ZONE,
+                                             FOREIGN KEY (user_id) REFERENCES users (id),
+                                             FOREIGN KEY (department_id) REFERENCES departments (id)
+            );
+
+            CREATE TABLE refresh_tokens (
+                                            id VARCHAR(255) PRIMARY KEY,
+                                            user_id VARCHAR(255) NOT NULL,
+                                            token VARCHAR(255) NOT NULL,
+                                            expiry_date VARCHAR(255) NOT NULL,
+                                            FOREIGN KEY (user_id) REFERENCES users (id)
+            );
+        </sql>
+    </changeSet>
+</databaseChangeLog>
